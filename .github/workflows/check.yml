@@ -1,0 +1,30 @@
+name: Build and test
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Stress-test scene
+        run: node test_scene.cjs
+      - name: Build universal native app
+        run: ./mac/build-mac.sh
+      - name: Verify app signature and bundle
+        run: |
+          codesign --verify --deep --strict --verbose=2 build/PressureFriends.app
+          plutil -lint build/PressureFriends.app/Contents/Info.plist
+          lipo -archs build/PressureFriends.app/Contents/MacOS/PressureFriends
+      - name: Package app
+        run: ./mac/package-release.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PressureFriends-macOS
+          path: dist/

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Pressure Friends · Pixel Desktop Companion</title>
+<style>
+*{box-sizing:border-box}
+:root{font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Display",sans-serif;color:#e9eaf5;background:#090d16}
+html,body{margin:0;min-height:100%;overflow-x:hidden}
+body{background: radial-gradient(circle at 10% -25%,#182948 0%,transparent 50%),#0a0e18}
+.demo-ui{min-height:100vh;padding:28px;display:grid;grid-template-columns:minmax(275px,360px) minmax(0,1fr);gap:25px;align-items:stretch}
+.controls{padding:29px;border:1px solid rgba(255,255,255,.09);background:#101724;border-radius:23px;display:flex;flex-direction:column;justify-content:center;box-shadow:0 20px 65px #0004}
+.eyebrow{font-size:11px;font-weight:750;letter-spacing:.17em;color:#92a5c5}
+h1{font-size:35px;line-height:1.06;letter-spacing:-.045em;margin:16px 0 12px}
+p{font-size:14px;line-height:1.64;color:#9ba9bc;margin:0 0 25px}
+.metric{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.metric strong{font-weight:700;font-size:14px}.metric span{font-size:32px;font-weight:770;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.track{appearance:none;width:100%;height:7px;background:linear-gradient(90deg,#55caac,#8bda94 36%,#f6ae4d 67%,#ff637d);border-radius:30px;margin:14px 0 26px;cursor:pointer}
+.track::-webkit-slider-thumb{appearance:none;width:21px;height:21px;background:#fff;border:4px solid #182338;border-radius:100%;box-shadow:0 0 0 2px #ffffff33}
+.track::-moz-range-thumb{width:15px;height:15px;background:white;border:4px solid #182338;border-radius:100%}
+.group-label{display:flex;justify-content:space-between;align-items:center;margin:8px 0 10px;font-size:12px;color:#98a9c2;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.group-label em{font-style:normal;color:#f5f8ff}
+.segmented{display:flex;background:#0c1220;padding:4px;border:1px solid #25324a;border-radius:12px;margin-bottom:19px;gap:3px}.segmented button{flex:1;min-width:0;border:0;border-radius:9px;padding:9px 2px;font-weight:700;color:#93a2ba;background:transparent;cursor:pointer;font-size:12px}.segmented button.selected{background:#26364c;color:white}
+.buttons{display:flex;gap:9px;margin-top:7px}.buttons button{padding:12px 14px;border-radius:11px;border:1px solid #334055;color:#dce8fa;background:#17253a;cursor:pointer;font-weight:700}.buttons button.primary{background:#e7f5ff;border-color:#e7f5ff;color:#18263a}
+.count{padding:12px 0 3px;display:flex;align-items:center;gap:11px}.dot{width:9px;height:9px;background:#52d8a4;border-radius:100%;box-shadow:0 0 18px #52d8a4}.status{font-size:13px;font-weight:700;color:#bac5da}.caption{font-size:11px;color:#8290a5;line-height:1.55;margin-top:24px}
+.preview-frame{min-width:0;display:flex;flex-direction:column;gap:12px}.desktop{position:relative;flex:1;min-height:560px;border-radius:22px;overflow:hidden;isolation:isolate;background:radial-gradient(ellipse at 67% 18%,#a1a9ccbb 0%,#657ca8 22%,#344e81 52%,#1a2a4e 83%);box-shadow:0 18px 50px #0007;border:1px solid #46557d}.desktop::before{content:"";position:absolute;inset:0;background: radial-gradient(circle at 25% 95%,#d599c35a 0%,transparent 35%),radial-gradient(circle at 80% 0%,#ecadc166 0%,transparent 38%);pointer-events:none}.desktop-top{height:28px;border-bottom:1px solid #ffffff24;background:#ffffff24;backdrop-filter:blur(15px);position:absolute;left:0;right:0;top:0;display:flex;justify-content:space-between;padding:0 14px;align-items:center;color:#f3f5ff;font-size:10px;font-weight:700}.fake-file{position:absolute;color:white;opacity:.68;text-align:center;font-size:10px;text-shadow:1px 1px 4px #122;display:grid;gap:5px;align-items:center;justify-items:center}.fake-file .ico{width:35px;height:40px;background:#f8fdff;border:3px solid #d6ecf7;border-radius:3px;box-shadow:0 4px 8px #0004}.fake-file.one{left:9%;top:17%}.fake-file.two{left:8%;top:42%}.fake-file.two .ico{background:#ffd0b4;border-color:#fbe3ce}.fake-file.three{right:8%;top:25%}.fake-file.three .ico{background:#e8e4ff;border-color:#d9d4e8}.fake-dock{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);height:42px;border-radius:15px;display:flex;align-items:center;gap:8px;padding:6px 12px;background:#fff5;border:1px solid #fff4;backdrop-filter:blur(20px)}.fake-dock i{display:block;width:26px;height:26px;border-radius:8px;background:linear-gradient(150deg,#95e8ff,#264b94)}.fake-dock i:nth-child(2){background:linear-gradient(150deg,#f6c3e9,#ac368b)}.fake-dock i:nth-child(3){background:linear-gradient(150deg,#c1eea5,#2d9b62)}.fake-dock i:nth-child(4){background:linear-gradient(150deg,#ffe1ae,#ce795b)}.fake-dock i:nth-child(5){background:linear-gradient(150deg,#faeee5,#a1b8ff)}
+.character-window{position:absolute;right:5%;bottom:7%;width:min(82%,680px);aspect-ratio:2400/1400;pointer-events:none;filter:drop-shadow(0 12px 9px #0e1a3c48);transform-origin:100% 100%}
+#scene{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
+.preview-foot{padding:0 7px;display:flex;justify-content:space-between;color:#8c99ac;font-size:12px}
+strong.highlight{color:#f8faff}
+html.native{color-scheme:light}
+html.native,html.native body{height:100%;min-height:100%;width:100%;overflow:hidden;background:transparent!important}
+html.native .demo-ui{display:block;min-height:0;padding:0;height:100%;background:transparent!important}
+html.native .controls,html.native .preview-foot,html.native .desktop-top,html.native .fake-file,html.native .fake-dock{display:none!important}
+html.native .preview-frame,html.native .desktop{display:block;border:0;min-height:0;height:100%;width:100%;background:transparent!important;border-radius:0;box-shadow:none;overflow:hidden}
+html.native .desktop:before{display:none}
+html.native .character-window{width:100%;right:0;bottom:0;filter:none}
+@media(max-width:830px){.demo-ui{grid-template-columns:1fr;padding:12px;gap:15px}.controls{padding:19px}.preview-frame{order:-1}.desktop{min-height:360px}.character-window{width:92%;right:3%}h1{font-size:28px}}
+@media(prefers-reduced-motion:reduce){.character-window{transition:none}}
+</style>
+</head>
+<body>
+<main class="demo-ui">
+  <section class="controls">
+    <div class="eyebrow">PIXEL DESKTOP COMPANION • LIVE DEMO</div>
+    <h1>When your Mac<br>feels pressure.</h1>
+    <p>She smiles, follows each arrival with her eyes, then giggles and laughs as the crowd grows. When the pressure drops, they walk away <em>one by one</em>.</p>
+    <div class="metric"><strong>Simulated system pressure</strong><span id="pressureReadout">6%</span></div>
+    <input id="pressureSlider" class="track" type="range" min="0" max="100" value="6" aria-label="Simulated system pressure">
+    <div class="group-label"><span>Desktop companion size</span><em id="sizeReadout">100%</em></div>
+    <input id="sizeSlider" class="track" type="range" min="25" max="160" value="100" aria-label="Companion size">
+    <div class="segmented" aria-label="Metric source">
+      <button type="button" data-mode="max" class="selected">Max pressure</button>
+      <button type="button" data-mode="cpu">CPU</button>
+      <button type="button" data-mode="ram">RAM</button>
+    </div>
+    <div class="buttons"><button class="primary" id="demoBtn" type="button">▶ Run stress demo</button><button id="resetBtn" type="button">↺ Reset</button></div>
+    <div class="count"><span class="dot"></span><span class="status"><span id="charactersReadout">0</span>/5 characters on screen · <span id="reactionReadout">Happy</span></span></div>
+    <div class="caption">Drag pressure up and down. Characters enter and leave with actual walking motion, not fading. <strong class="highlight">On macOS, live CPU and memory readings replace the slider, and size can be changed from the menu.</strong></div>
+  </section>
+  <section class="preview-frame">
+    <div class="desktop" id="desktop">
+      <div class="desktop-top"><span>●&nbsp; Pixel OS &nbsp;&nbsp; File &nbsp;&nbsp; Edit &nbsp;&nbsp; View</span><span>CPU / RAM REACTION DEMO &nbsp; ▰ ▰</span></div>
+      <div class="fake-file one"><div class="ico"></div>Projects</div>
+      <div class="fake-file two"><div class="ico"></div>Screenshots</div>
+      <div class="fake-file three"><div class="ico"></div>Notes</div>
+      <div class="fake-dock"><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="character-window" id="characterWindow"><canvas id="scene" width="2400" height="1400" aria-label="Animated pixel girl on a couch and pressure characters"></canvas></div>
+    </div>
+    <div class="preview-foot"><span>Transparent PNG layers · independently animated</span><span>Native overlay · macOS 14+</span></div>
+  </section>
+</main>
+<script src="scene.js"></script>
+</body>
+</html>

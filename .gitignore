@@ -1,0 +1,11 @@
+.DS_Store
+build/
+dist/
+__pycache__/
+*.pyc
+PressureFriends-standalone.html
+preview-*.png
+v3-*.png
+face-zoom.png
+make_layers.py
+make_faces.py
