@@ -11,7 +11,7 @@ run('node', 'test_scene.cjs')
 run('./mac/build-mac.sh')
 run('swiftc', '-module-cache-path', 'build/module-cache', '-framework', 'AppKit',
     '-framework', 'WebKit', 'mac/test-webview.swift', '-o', 'build/test-webview')
-run('./build/test-webview', str(root / 'build/PressureFriends.app/Contents/Resources'))
+run('./build/test-webview', str(root / 'build/HotCPU.app/Contents/Resources'))
 
 # Compile against the actual controller; expose private members only in this test copy.
 source = (root / 'mac/main.swift').read_text().split('let app = NSApplication.shared')[0]

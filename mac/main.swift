@@ -163,16 +163,16 @@ final class Controller: NSObject, NSApplicationDelegate, WKNavigationDelegate, N
     private func updateStatus() {
         let pressure = mode == "cpu" ? lastCpu : mode == "ram" ? lastRam : max(lastCpu, lastRam)
         statusItem.button?.title = "◉ \(Int(pressure.rounded()))%"
-        statusItem.button?.toolTip = "Pressure Friends · CPU \(Int(lastCpu.rounded()))% · RAM usage \(Int(lastRam.rounded()))% · Drag the companion to move it"
+        statusItem.button?.toolTip = "HOT CPU · CPU \(Int(lastCpu.rounded()))% · RAM usage \(Int(lastRam.rounded()))% · Drag the companion to move it"
         cpuReading.title = "CPU: \(Int(lastCpu.rounded()))%"
         ramReading.title = "RAM usage: \(Int(lastRam.rounded()))%"
     }
     private func makeMenu() {
         statusItem = NSStatusBar.system.statusItem(withLength:NSStatusItem.variableLength)
         statusItem.button?.title = "◉"
-        statusItem.button?.toolTip = "Pressure Friends · Animated system load"
+        statusItem.button?.toolTip = "HOT CPU · Animated system load"
         let menu = NSMenu()
-        let caption = NSMenuItem(title:"PRESSURE FRIENDS",action:nil,keyEquivalent:"")
+        let caption = NSMenuItem(title:"HOT CPU",action:nil,keyEquivalent:"")
         caption.isEnabled = false
         menu.addItem(caption)
         cpuReading.isEnabled = false

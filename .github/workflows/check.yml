@@ -19,12 +19,12 @@ jobs:
         run: ./mac/build-mac.sh
       - name: Verify app signature and bundle
         run: |
-          codesign --verify --deep --strict --verbose=2 build/PressureFriends.app
-          plutil -lint build/PressureFriends.app/Contents/Info.plist
-          lipo -archs build/PressureFriends.app/Contents/MacOS/PressureFriends
+          codesign --verify --deep --strict --verbose=2 build/HotCPU.app
+          plutil -lint build/HotCPU.app/Contents/Info.plist
+          lipo -archs build/HotCPU.app/Contents/MacOS/HotCPU
       - name: Package app
         run: ./mac/package-release.sh
       - uses: actions/upload-artifact@v4
         with:
-          name: PressureFriends-macOS
+          name: HotCPU-macOS
           path: dist/

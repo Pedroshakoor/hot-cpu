@@ -9,7 +9,7 @@ const context = new Proxy({}, {get: (_, name) => {
     if (args.length !== 8) return;
     const [sx,sy,sw,sh,dx,dy,dw,dh] = args;
     assert(sx>=0 && sy>=0 && sx+sw<=image.width && sy+sh<=image.height, 'Sprite must fit source sheet');
-    assert(dw/dh<0.65, 'Full-body actors must remain tall and slender');
+    if(image.path?.includes('men-'))assert(dw/dh<0.65, 'Full-body actors must remain tall and slender');
     if(image.path==='assets/men-tall.png')drawnSprites.add(sx);
   };
   return () => {};
@@ -21,7 +21,7 @@ function element(id) {
 let frame, now=0, frameCount=0, interval, cleared=0;
 const sandbox = {console, window:{}, document:{querySelector:element,querySelectorAll:()=>[],documentElement:element('html'),createElement:()=>element('offscreen')},performance:{now:()=>now},Image:class {complete=true;set src(value){this.path=value;const bytes=fs.readFileSync(value);this.width=this.naturalWidth=bytes.readUInt32BE(16);this.height=this.naturalHeight=bytes.readUInt32BE(20);}},requestAnimationFrame:fn=>frame=fn,setInterval:fn=>(interval=fn,1),clearInterval:()=>{interval=null;cleared++;}};
 vm.createContext(sandbox);
-vm.runInContext(fs.readFileSync('scene.js','utf8').replace('updateTarget();setScale(100);requestAnimationFrame(render);', 'window.__test={actors,state,updateGesture,gestureFrame};updateTarget();setScale(100);requestAnimationFrame(render);'),sandbox);
+vm.runInContext(fs.readFileSync('scene.js','utf8').replace('updateTarget();setScale(100);requestAnimationFrame(render);', 'window.__test={actors,state,updateGesture,gestureFrame,updateGirlPose,girlFrameIndex,girlRects};updateTarget();setScale(100);requestAnimationFrame(render);'),sandbox);
 const api=sandbox.window;
 function frames(n){for(let i=0;i<n;i++){now+=1000/60;frameCount++;frame(now);}}
 function count(n){assert.equal(element('#charactersReadout').textContent,String(n));}
@@ -60,3 +60,27 @@ assert.notEqual(gestureFrame(a,555).gesture,'cheer');
 state.targetCount=5;api.setSimulatedPressure(0);assert(state.celebrateUntil>now/1000);
 api.setSimulatedPressure(100);assert.equal(state.celebrateUntil,0);
 console.log('PASS: arrival wave -> rubbing -> rest, all three rubbing frames, occasional joy, side-eye trigger, exit cancellation, re-entry, celebration, and interrupted celebration.');
+
+const {updateGirlPose,girlFrameIndex,girlRects}=api.__test;
+state.sideEyeUntil=0;state.celebrateUntil=0;
+for(const [pressure,stage] of [[0,0],[20,1],[40,2],[60,3],[80,4],[100,5],[0,0]]){
+ state.pressure=pressure;
+ let previous=state.girlFrame;
+ for(let n=0;n<300;n++){
+  updateGirlPose(1000+n/30,1/30);
+  assert(state.girlFrame>=0 && state.girlFrame<24);
+  assert(Math.abs(state.girlFrame-previous)<.36 || previous>23.6,'Pose transitions must advance continuously, not snap');
+  previous=state.girlFrame;
+  const frame=girlFrameIndex(1000+n/30);assert(frame>=0 && frame<24);assert(girlRects[frame]);
+ }
+ assert.equal(state.girlStage,stage);
+ assert.equal(state.girlFrame,stage===0?0:[0,3,6,10,14,18][stage]);
+}
+state.pressure=61;updateGirlPose(2000,.03);assert.equal(state.girlStage,3);
+state.pressure=59;updateGirlPose(2000.03,.03);assert.equal(state.girlStage,3,'Minor pressure jitter must not flip poses');
+for(let n=0;n<1000;n++){state.pressure=n%2?100:0;updateGirlPose(2100+n/30,1/30);assert(Number.isFinite(state.girlFrame));}
+console.log('PASS: six pose stages, all transition frames in bounds, continuous advancement, authored recovery, hysteresis, rapid retargeting.');
+
+state.pressure=95;updateGirlPose(3000,.03);assert.equal(state.girlStage,5,'Peak pose must be reachable without an exact 100% reading');
+state.pressure=94;updateGirlPose(3000.03,.03);assert.equal(state.girlStage,5);
+state.pressure=91;updateGirlPose(3000.06,.03);assert.equal(state.girlStage,4);

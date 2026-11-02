@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.0 — 2026-11-02
+
+- Renamed the app and public project to HOT CPU, with a new app icon.
+- Added 24 adult-character frames covering six approved playful pressure-driven poses.
+- Added eased frame progression, gradual recovery, and hysteresis around pressure thresholds.
+- Separated the stationary couch from the animated woman; normalized seated-body height and frame registration.
+- Kept arrival waves, palm rubbing, group cheers, and playful wink reactions.
+- Preserved size and position preferences through the existing bundle identifier.
+- Added native full-sequence capture and transition regression checks.
+
 ## 0.3.0 — 2026-11-02
 
 - Three-frame arrival waves followed by joyful palm rubbing for all five men.
