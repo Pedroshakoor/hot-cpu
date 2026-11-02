@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0 — 2026-11-02
+
+- Three-frame arrival waves followed by joyful palm rubbing for all five men.
+- Staggered occasional hand-rubbing, with a playful side-eye from the girl.
+- A short group wave-and-bounce celebration before departures after a large pressure drop.
+- Complete transparent gesture sprites, anchored to preserve tall proportions and full hands.
+- Gesture timing, cancellation, re-entry, and sprite-bound regression tests.
+
 ## 0.2.0 — 2026-11-02
 
 - First public preview of the native macOS companion.

@@ -6,6 +6,8 @@ ctx.imageSmoothingEnabled=false;
 const img={};
 const paths={base:'scene-base.png',head:'girl-head.png',torso:'girl-torso.png'};
 paths.men='men-tall.png';
+paths.rub='men-rub.png';
+paths.wave='men-wave.png';
 for(let mood=0;mood<5;mood++)for(let gaze=0;gaze<5;gaze++)paths[`face-${mood}-${gaze}`]=`expressions/face-${mood}-${gaze}.png`;
 for(const [key,path] of Object.entries(paths)){
  const image=new Image();image.decoding='async';image.src='assets/'+path;img[key]=image;
@@ -21,6 +23,7 @@ function applyForegroundOccluder(){
 }
 // Full-body sprites share one sheet. Source rectangles include transparent gutters.
 const spriteRects=[[119,294],[479,306],[854,281],[1212,294],[1584,300]];
+const gestureRects={"rub":[[[8,24,187,485,102.0],[204,15,196,493,307.0],[412,29,198,480,512.5],[619,27,194,482,721.0],[828,17,192,492,928.0]],[[6,531,194,487,102.5],[205,525,198,492,307.0],[412,537,199,481,513.0],[618,536,195,482,721.0],[828,526,196,492,928.0]],[[7,1040,189,488,102.0],[206,1032,196,495,307.0],[414,1046,197,482,512.5],[620,1045,193,483,721.0],[832,1035,190,493,928.0]]],"wave":[[[13,25,178,487,103.0],[210,19,189,493,309.0],[412,37,202,475,509.0],[614,30,187,482,711.5],[829,25,191,487,933.0]],[[13,512,178,512,103.0],[208,531,191,493,309.0],[411,549,203,475,509.0],[614,543,187,481,711.5],[823,537,197,487,933.0]],[[14,1024,177,509,103.0],[211,1024,188,509,309.0],[415,1024,186,508,509.0],[615,1054,185,478,711.5],[832,1024,188,509,933.0]]]};
 const places=[
  {x:1610,side:1,s:1.43},
  {x:360,side:-1,s:1.50},
@@ -28,25 +31,53 @@ const places=[
  {x:670,side:-1,s:1.47},
  {x:970,side:1,s:1.54},
 ];
-const actors=places.map((p,i)=>({...p,index:i+1,progress:0,want:0,phase:i*1.33,startedAt:0}));
+const actors=places.map((p,i)=>({...p,index:i+1,progress:0,want:0,phase:i*1.33,startedAt:0,arrived:false,gesture:"idle",gestureStart:0,gestureUntil:0,nextJoy:Infinity}));
 const WIN=document.querySelector('#characterWindow');
-const state={cpu:6,ram:6,mode:'max',native:false,pressure:6,targetCount:0,activeCount:0,lastCountChange:-1e9,start:performance.now(),demo:null,lastTime:0,emotional:0,scale:1,eyeX:0,eyeY:0,focused:-1,focusUntil:0};
+const state={cpu:6,ram:6,mode:'max',native:false,pressure:6,targetCount:0,activeCount:0,lastCountChange:-1e9,start:performance.now(),demo:null,lastTime:0,emotional:0,scale:1,eyeX:0,eyeY:0,focused:-1,focusUntil:0,celebrateUntil:0,sideEyeUntil:0,sideEyeActor:-1};
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const smooth=(a,b,n)=>{const v=clamp((n-a)/(b-a),0,1);return v*v*(3-2*v)};
 const thresholds=[16,32,48,64,80];
 function calcCount(n){return thresholds.filter(x=>n>=x).length;}
 function pressureValue(){return state.mode==='cpu'?state.cpu:state.mode==='ram'?state.ram:Math.max(state.cpu,state.ram);}
-function updateTarget(){state.pressure=pressureValue();state.targetCount=calcCount(state.pressure);let v=document.querySelector('#pressureReadout');if(v)v.textContent=Math.round(state.pressure)+'%';let s=document.querySelector('#pressureSlider');if(s&&!state.native)s.value=Math.round(state.pressure);}
+function updateTarget(){state.pressure=pressureValue();const next=calcCount(state.pressure);
+ const t=(performance.now()-state.start)/1000;
+ if(state.targetCount>=3 && next<=1 && actors.some(a=>a.progress>.5))state.celebrateUntil=t+2;
+ if(next>state.targetCount)state.celebrateUntil=0;
+ state.targetCount=next;let v=document.querySelector('#pressureReadout');if(v)v.textContent=Math.round(state.pressure)+'%';let s=document.querySelector('#pressureSlider');if(s&&!state.native)s.value=Math.round(state.pressure);}
 function setPressure(v){state.cpu=state.ram=clamp(Number(v)||0,0,100);updateTarget();}
 function setMode(m){if(!['cpu','ram','max'].includes(m))return;state.mode=m;document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('selected',b.dataset.mode===m));updateTarget();}
 function setScale(v){const s=clamp(Number(v)||100,25,160);state.scale=s/100;if(WIN)WIN.style.transform=state.native?'none':`scale(${state.scale})`;let i=document.querySelector('#sizeSlider');if(i&&!state.native)i.value=s;let r=document.querySelector('#sizeReadout');if(r)r.textContent=Math.round(s)+'%';}
 function setNativeMetrics(cpu,ram){state.cpu=clamp(Number(cpu)||0,0,100);state.ram=clamp(Number(ram)||0,0,100);updateTarget();}
 window.setSimulatedPressure=setPressure;window.setNativeMetrics=setNativeMetrics;window.setMode=setMode;window.setCompanionScale=setScale;
 window.setNative=()=>{state.native=true;document.documentElement.classList.add('native');if(WIN)WIN.style.transform='none';stopDemo();};
+function beginGesture(a,gesture,t,duration){
+ a.gesture=gesture;a.gestureStart=t;a.gestureUntil=t+duration;
+}
+function updateGesture(a,t){
+ if(!a.want){a.arrived=false;a.gesture='idle';a.nextJoy=Infinity;return;}
+ if(a.progress<.985)return;
+ if(!a.arrived){a.arrived=true;beginGesture(a,'wave',t,.9);return;}
+ if(t<state.celebrateUntil)return;
+ if(a.gesture==='wave' && t>=a.gestureUntil){beginGesture(a,'rub',t,2.2);return;}
+ if(a.gesture==='rub' && t>=a.gestureUntil){a.gesture='idle';a.nextJoy=t+11+a.index*2.7;}
+ if(a.gesture==='idle' && t>=a.nextJoy && state.pressure>=32 &&
+    !actors.some(other=>other!==a && other.gesture!=='idle' && t<other.gestureUntil)){
+  beginGesture(a,'rub',t,1.8);
+  state.sideEyeActor=a.index-1;state.sideEyeUntil=t+1.4;
+ }
+}
+function gestureFrame(a,t){
+ const gesture=t<state.celebrateUntil && a.progress>.5?'cheer':a.gesture;
+ if(gesture==='idle')return null;
+ const key=gesture==='rub'?'rub':'wave';
+ const start=gesture==='cheer'?state.celebrateUntil-2:a.gestureStart;
+ const phase=Math.floor(Math.max(0,t-start)*(key==='rub'?9:7))%4;
+ return {key,row:[0,1,2,1][phase],gesture};
+}
 function advance(t,dt){
  const now=t*1000;
  const stepMs=1800;
- if(state.activeCount!==state.targetCount && now-state.lastCountChange>=stepMs){
+ if(t>=state.celebrateUntil && state.activeCount!==state.targetCount && now-state.lastCountChange>=stepMs){
   const up=state.targetCount>state.activeCount;
   state.activeCount+=up?1:-1;
   state.lastCountChange=now;
@@ -58,6 +89,7 @@ function advance(t,dt){
   // The character moves from fully OUTSIDE the screen, not an opacity fade.
   a.progress+=(a.want-a.progress)*(1-Math.exp(-(a.want?2.55:2.5)*dt));
   if(Math.abs(a.progress-a.want)<0.0004)a.progress=a.want;
+  updateGesture(a,t);
  });
  state.emotional+=(state.activeCount/5-state.emotional)*(1-Math.exp(-3.5*dt));
  const num=document.querySelector('#charactersReadout');if(num)num.textContent=String(state.activeCount);
@@ -80,12 +112,19 @@ function paintActor(a,t){
  const stride=t*12.2+a.phase;
  const step=moving?Math.abs(Math.sin(stride))*11:Math.sin(t*1.8+a.phase)*1.8;
  const pitch=moving?Math.sin(stride)*.019:Math.sin(t*1.2+a.phase)*.004;
- const y=1350-ih+step;
+ const pose=gestureFrame(a,t);
+ const cheer=pose?.gesture==='cheer'?Math.abs(Math.sin((t+a.phase)*8))*17:0;
+ const y=1350-ih+step-cheer;
  ctx.save();ctx.translate(x+iw*.5,y+ih);
  ctx.rotate(pitch);
  // Walk cycle: translate from outside the frame with rhythmic footfall bounce,
  // body lean and slight whole-sprite sway. Keep the original sprite uncut.
- ctx.drawImage(im,sx,0,sw,im.height,-iw*.5,-ih,iw,ih);
+ const atlas=pose && img[pose.key];
+ if(atlas?.complete && atlas.naturalWidth){
+  const [px,py,pw,ph,foot]=gestureRects[pose.key][pose.row][a.index-1];
+  const scale=753*a.s/ph;
+  ctx.drawImage(atlas,px,py,pw,ph,-(foot-px)*scale,-20*a.s-ph*scale,pw*scale,ph*scale);
+ }else ctx.drawImage(im,sx,0,sw,im.height,-iw*.5,-ih,iw,ih);
  ctx.restore();
 }
 function selectGaze(t){
@@ -113,9 +152,10 @@ function paintGirl(t,dt){
  ctx.save();ctx.translate(cx,cy);ctx.rotate(lean);ctx.translate(Math.sin(t*.7)*1.5,bob);ctx.translate(-cx,-cy);
  draw('head',BASE_X,BASE_Y);
  // Keep face pixel-perfect, use an atlas generated from the ORIGINAL face.
- let mood=Math.min(4,state.activeCount);
+ const sideEye=t<state.sideEyeUntil && state.sideEyeActor>=0 && actors[state.sideEyeActor].want;
+ let mood=sideEye?0:Math.min(4,state.activeCount);
  if(mood>=2){const laugh=Math.sin(t*4.3);if(laugh<-.38)mood=Math.max(1,mood-1);}
- const gazeTarget=selectGaze(t);
+ const gazeTarget=sideEye?(actorHead(actors[state.sideEyeActor]).x<cx?-1:1):selectGaze(t);
  state.eyeX+= (gazeTarget-state.eyeX)*(1-Math.exp(-12*dt));
  const gaze=Math.round(clamp(state.eyeX,-1,1)*2)+2;
  const face=img[`face-${mood}-${gaze}`];

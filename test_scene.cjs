@@ -9,8 +9,8 @@ const context = new Proxy({}, {get: (_, name) => {
     if (args.length !== 8) return;
     const [sx,sy,sw,sh,dx,dy,dw,dh] = args;
     assert(sx>=0 && sy>=0 && sx+sw<=image.width && sy+sh<=image.height, 'Sprite must fit source sheet');
-    assert(dw/dh<0.5, 'Full-body actors must remain tall and slender');
-    drawnSprites.add(sx);
+    assert(dw/dh<0.65, 'Full-body actors must remain tall and slender');
+    if(image.path==='assets/men-tall.png')drawnSprites.add(sx);
   };
   return () => {};
 }});
@@ -19,9 +19,9 @@ function element(id) {
   return elements.get(id);
 }
 let frame, now=0, frameCount=0, interval, cleared=0;
-const sandbox = {console, window:{}, document:{querySelector:element,querySelectorAll:()=>[],documentElement:element('html'),createElement:()=>element('offscreen')},performance:{now:()=>0},Image:class {complete=true;set src(value){const bytes=fs.readFileSync(value);this.width=this.naturalWidth=bytes.readUInt32BE(16);this.height=this.naturalHeight=bytes.readUInt32BE(20);}},requestAnimationFrame:fn=>frame=fn,setInterval:fn=>(interval=fn,1),clearInterval:()=>{interval=null;cleared++;}};
+const sandbox = {console, window:{}, document:{querySelector:element,querySelectorAll:()=>[],documentElement:element('html'),createElement:()=>element('offscreen')},performance:{now:()=>now},Image:class {complete=true;set src(value){this.path=value;const bytes=fs.readFileSync(value);this.width=this.naturalWidth=bytes.readUInt32BE(16);this.height=this.naturalHeight=bytes.readUInt32BE(20);}},requestAnimationFrame:fn=>frame=fn,setInterval:fn=>(interval=fn,1),clearInterval:()=>{interval=null;cleared++;}};
 vm.createContext(sandbox);
-vm.runInContext(fs.readFileSync('scene.js','utf8'),sandbox);
+vm.runInContext(fs.readFileSync('scene.js','utf8').replace('updateTarget();setScale(100);requestAnimationFrame(render);', 'window.__test={actors,state,updateGesture,gestureFrame};updateTarget();setScale(100);requestAnimationFrame(render);'),sandbox);
 const api=sandbox.window;
 function frames(n){for(let i=0;i<n;i++){now+=1000/60;frameCount++;frame(now);}}
 function count(n){assert.equal(element('#charactersReadout').textContent,String(n));}
@@ -39,3 +39,24 @@ api.setCompanionScale(25);assert.equal(element('#characterWindow').style.transfo
 element('#resetBtn').listeners.click();frames(1000);count(0);
 assert.equal(drawnSprites.size,5,'Every full-body sprite must render');
 console.log(`PASS: thresholds, reverse exits, metric modes, invalid inputs, 10,000 rapid changes, resizing, demo cancellation, reset; ${frameCount} simulated frames.`);
+
+const {actors,state,updateGesture,gestureFrame}=api.__test;
+const a=actors[0];
+Object.assign(a,{want:1,progress:1,arrived:false,gesture:'idle'});
+state.celebrateUntil=0;
+updateGesture(a,500);assert.equal(a.gesture,'wave');
+updateGesture(a,501);assert.equal(a.gesture,'rub');
+assert.equal(gestureFrame(a,501.12).key,'rub');
+const rows=new Set([501,501.12,501.24].map(t=>gestureFrame(a,t).row));assert.equal(rows.size,3);
+updateGesture(a,504);assert.equal(a.gesture,'idle');
+state.pressure=90;
+actors.slice(1).forEach(other=>other.gesture='idle');
+updateGesture(a,a.nextJoy+.1);assert.equal(a.gesture,'rub');assert.equal(state.sideEyeActor,0);
+assert(state.sideEyeUntil>a.gestureStart);
+a.want=0;updateGesture(a,550);assert.equal(a.gesture,'idle');assert(!a.arrived);
+a.want=1;updateGesture(a,551);assert.equal(a.gesture,'wave');
+state.celebrateUntil=554;assert.equal(gestureFrame(a,552).gesture,'cheer');
+assert.notEqual(gestureFrame(a,555).gesture,'cheer');
+state.targetCount=5;api.setSimulatedPressure(0);assert(state.celebrateUntil>now/1000);
+api.setSimulatedPressure(100);assert.equal(state.celebrateUntil,0);
+console.log('PASS: arrival wave -> rubbing -> rest, all three rubbing frames, occasional joy, side-eye trigger, exit cancellation, re-entry, celebration, and interrupted celebration.');

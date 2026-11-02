@@ -34,6 +34,11 @@ final class Smoke: NSObject, WKNavigationDelegate {
             """) { value, error in
                 if let error = error { print("FAIL: \(error)"); exit(1) }
                 print(value ?? "no result")
+                for (index, delay) in [3.4, 3.55, 3.7].enumerated() {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                        self.saveSnapshot("reactions-rub-\(index)")
+                    }
+                }
                 self.checkCount(5, after: 10) {
                     self.view.takeSnapshot(with: nil) { image, error in
                         guard error == nil, let data = image?.tiffRepresentation,
@@ -46,10 +51,22 @@ final class Smoke: NSObject, WKNavigationDelegate {
                     }
                     self.view.evaluateJavaScript("window.setNativeMetrics(0,0)") { _, error in
                         if let error = error { print("FAIL: \(error)"); exit(1) }
-                        self.checkCount(0, after: 10) { print("PASS: native five-character entry and full recovery; no JS errors"); exit(0) }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { self.saveSnapshot("reactions-cheer") }
+                        self.checkCount(0, after: 11) { print("PASS: native five-character entry and full recovery; no JS errors"); exit(0) }
                     }
                 }
             }
+        }
+    }
+    func saveSnapshot(_ name: String) {
+        view.takeSnapshot(with: nil) { image, error in
+            guard error == nil, let data = image?.tiffRepresentation,
+                  let bitmap = NSBitmapImageRep(data: data),
+                  let png = bitmap.representation(using: .png, properties: [:]) else {
+                print("FAIL: reaction snapshot"); exit(1)
+            }
+            do { try png.write(to: URL(fileURLWithPath: "build/\(name).png")) }
+            catch { print("FAIL: \(error)"); exit(1) }
         }
     }
     func checkCount(_ expected: Int, after seconds: Double, completion: @escaping () -> Void) {
