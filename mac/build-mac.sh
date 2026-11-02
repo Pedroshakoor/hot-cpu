@@ -2,6 +2,14 @@
 # Package the native transparent overlay. Requires macOS 14+ and Xcode command line tools.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# Remove only generated resources so an incremental build cannot ship stale scripts/assets.
+python3 - <<'CLEAN'
+from pathlib import Path
+import shutil
+resources = Path('build/PressureFriends.app/Contents/Resources')
+if resources.exists():
+    shutil.rmtree(resources)
+CLEAN
 mkdir -p build/PressureFriends.app/Contents/{MacOS,Resources}
 BIN="build/PressureFriends.app/Contents/MacOS/PressureFriends"
 for ARCH in arm64 x86_64; do
