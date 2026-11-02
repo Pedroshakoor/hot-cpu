@@ -7,6 +7,7 @@ root = Path(__file__).resolve().parent
 def run(*args):
     subprocess.run(args, cwd=root, check=True)
 
+run('node', 'test_shirt_gag.cjs')
 run('node', 'test_scene.cjs')
 run('./mac/build-mac.sh')
 run('swiftc', '-module-cache-path', 'build/module-cache', '-framework', 'AppKit',

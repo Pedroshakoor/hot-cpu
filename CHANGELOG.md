@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.0 — 2026-11-02
+
+- Added the 75% shirt-toss gag with a comic-puff outfit change and full-coverage swim top.
+- Shirt stays anchored to the rightmost character's head across poses and pressure changes.
+- Below 65%, he passes it back and the original shirt is restored with a comic puff.
+- Added consistent swim-top variants for all 24 poses and a 12-frame reaching, passing, and relaxing sequence.
+- Retained the shirt-holder until the return completes; committed handoffs finish even if pressure changes midway.
+- Added continuous eased throw/return paths, a short cooldown, and state/attachment regression checks.
+- Added native 20 FPS demonstration capture with all-phase assertions.
+
 ## 0.4.0 — 2026-11-02
 
 - Renamed the app and public project to HOT CPU, with a new app icon.

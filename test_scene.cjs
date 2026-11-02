@@ -3,14 +3,18 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const elements = new Map();
 const drawnSprites = new Set();
+const swimFrames = new Set();
+let lastTranslation;
 const context = new Proxy({}, {get: (_, name) => {
+  if(name==='translate')return(x,y)=>{lastTranslation=[x,y];};
   if (name === 'lineTo') return () => {throw Error('Column masks must not crop hands');};
   if (name === 'drawImage') return (image,...args) => {
     if (args.length !== 8) return;
     const [sx,sy,sw,sh,dx,dy,dw,dh] = args;
     assert(sx>=0 && sy>=0 && sx+sw<=image.width && sy+sh<=image.height, 'Sprite must fit source sheet');
-    if(image.path?.includes('men-'))assert(dw/dh<0.65, 'Full-body actors must remain tall and slender');
+    if(/men-(tall|rub|wave)/.test(image.path||''))assert(dw/dh<0.65, 'Full-body actors must remain tall and slender');
     if(image.path==='assets/men-tall.png')drawnSprites.add(sx);
+    if(image.path==='assets/girl-swim-poses.png')swimFrames.add(sx+'/'+sy);
   };
   return () => {};
 }});
@@ -21,7 +25,8 @@ function element(id) {
 let frame, now=0, frameCount=0, interval, cleared=0;
 const sandbox = {console, window:{}, document:{querySelector:element,querySelectorAll:()=>[],documentElement:element('html'),createElement:()=>element('offscreen')},performance:{now:()=>now},Image:class {complete=true;set src(value){this.path=value;const bytes=fs.readFileSync(value);this.width=this.naturalWidth=bytes.readUInt32BE(16);this.height=this.naturalHeight=bytes.readUInt32BE(20);}},requestAnimationFrame:fn=>frame=fn,setInterval:fn=>(interval=fn,1),clearInterval:()=>{interval=null;cleared++;}};
 vm.createContext(sandbox);
-vm.runInContext(fs.readFileSync('scene.js','utf8').replace('updateTarget();setScale(100);requestAnimationFrame(render);', 'window.__test={actors,state,updateGesture,gestureFrame,updateGirlPose,girlFrameIndex,girlRects};updateTarget();setScale(100);requestAnimationFrame(render);'),sandbox);
+vm.runInContext(fs.readFileSync('shirt-gag.js','utf8'),sandbox);
+vm.runInContext(fs.readFileSync('scene.js','utf8').replace('updateTarget();setScale(100);requestAnimationFrame(render);', 'window.__test={actors,state,updateGesture,gestureFrame,updateGirlPose,girlFrameIndex,girlRects,costume,advance,drawGirlSprite,paintCostumeFront,ownerShirtAnchor,ownerPalmAnchor,carriedShirtPoint};updateTarget();setScale(100);requestAnimationFrame(render);'),sandbox);
 const api=sandbox.window;
 function frames(n){for(let i=0;i<n;i++){now+=1000/60;frameCount++;frame(now);}}
 function count(n){assert.equal(element('#charactersReadout').textContent,String(n));}
@@ -84,3 +89,27 @@ console.log('PASS: six pose stages, all transition frames in bounds, continuous 
 state.pressure=95;updateGirlPose(3000,.03);assert.equal(state.girlStage,5,'Peak pose must be reachable without an exact 100% reading');
 state.pressure=94;updateGirlPose(3000.03,.03);assert.equal(state.girlStage,5);
 state.pressure=91;updateGirlPose(3000.06,.03);assert.equal(state.girlStage,4);
+
+const gag=api.__test.costume;
+Object.assign(gag,{phase:'covered',time:2,cooldown:0});
+Object.assign(state,{activeCount:0,targetCount:0,celebrateUntil:0,lastCountChange:0});
+api.__test.advance(4000,.016);
+assert.equal(actors[0].want,1,'The shirt owner cannot leave before returning it');
+assert.equal(actors.slice(1).filter(a=>a.want).length,0);
+for(let frame=0;frame<24;frame++){
+ state.girlFrame=frame;state.girlGoal=frame+.1;api.__test.drawGirlSprite(4000);
+}
+assert.equal(swimFrames.size,24,'All continuing poses must use the matching swim-top atlas');
+Object.assign(gag,{phase:'changing',time:1.2});api.__test.paintCostumeFront(4000);const hand=lastTranslation;
+Object.assign(gag,{phase:'throwing',time:0});api.__test.paintCostumeFront(4000);assert.deepEqual(lastTranslation,hand,'Throw must begin at the held shirt position');
+Object.assign(gag,{phase:'throwing',time:1});api.__test.paintCostumeFront(4000);const head=api.__test.ownerShirtAnchor(4000);
+assert(Math.hypot(lastTranslation[0]-head.x,lastTranslation[1]-head.y)<.001,'Landing must match attached head position');
+Object.assign(gag,{phase:'returning',time:.2});api.__test.paintCostumeFront(4000);
+assert(Math.hypot(lastTranslation[0]-head.x,lastTranslation[1]-head.y)<.001,'Lifting must begin at the same head anchor');
+const palm=api.__test.ownerPalmAnchor(4000);
+const carried=api.__test.carriedShirtPoint(4000,.95);
+assert(Math.hypot(palm.x-carried.x,palm.y-carried.y)<.001);
+Object.assign(gag,{phase:'returning',time:.95});api.__test.paintCostumeFront(4000);
+assert(Math.hypot(lastTranslation[0]-palm.x,lastTranslation[1]-palm.y)<.001,'Return flight must begin in his extended hand');
+Object.assign(gag,{phase:'returning',time:1.95});api.__test.paintCostumeFront(4000);assert.deepEqual(lastTranslation,hand,'Return must end in her hands');
+console.log('PASS: same owner retained, all 24 outfit poses, and continuous held/throw/head/return attachment boundaries.');

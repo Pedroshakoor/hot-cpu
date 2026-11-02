@@ -14,7 +14,9 @@ jobs:
         with:
           python-version: '3.12'
       - name: Stress-test scene
-        run: node test_scene.cjs
+        run: |
+          node test_shirt_gag.cjs
+          node test_scene.cjs
       - name: Build universal native app
         run: ./mac/build-mac.sh
       - name: Verify app signature and bundle
