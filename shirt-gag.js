@@ -16,19 +16,20 @@ function location(s){
 function update(s,input,dt){
  dt=Math.max(0,Math.min(.1,Number(dt)||0));
  s.cooldown=Math.max(0,s.cooldown-dt);
+ const pressure=Math.round(Number(input.pressure)||0);
  if(s.phase==='dressed'){
-  if(input.ready && input.ownerReady && input.pressure>=75 && !s.cooldown)enter(s,'prepare');
+  if(input.ready && input.ownerReady && pressure>=75 && !s.cooldown)enter(s,'prepare');
   return;
  }
  s.time+=dt;
  if(s.phase==='prepare'){
-  if(input.pressure<65)enter(s,'dressed');
+  if(pressure<65)enter(s,'dressed');
   else if(input.girlReady)enter(s,'changing');
  }else if(s.phase==='changing'&&s.time>=durations.changing)enter(s,'throwing');
  else if(s.phase==='throwing'&&s.time>=durations.throwing)enter(s,'covered');
- else if(s.phase==='covered'&&s.time>=.8&&input.pressure<65)enter(s,'prepareReturn');
+ else if(s.phase==='covered'&&s.time>=.8&&pressure<65)enter(s,'prepareReturn');
  else if(s.phase==='prepareReturn'){
-  if(input.pressure>=75)enter(s,'covered');
+  if(pressure>=75)enter(s,'covered');
   else if(input.girlReady)enter(s,'returning');
  }else if(s.phase==='returning'&&s.time>=durations.returning)enter(s,'dressing');
  else if(s.phase==='dressing'&&s.time>=durations.dressing){enter(s,'dressed');s.cooldown=4;}

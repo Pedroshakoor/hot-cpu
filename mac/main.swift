@@ -153,7 +153,7 @@ final class Controller: NSObject, NSApplicationDelegate, WKNavigationDelegate, N
     }
     private func sendMetrics() {
         guard appReady else { return }
-        webView.evaluateJavaScript(String(format:"window.setNativeMetrics(%.2f, %.2f)",lastCpu,lastRam),completionHandler:nil)
+        webView.evaluateJavaScript("window.setNativeMetrics(\(lastCpu), \(lastRam))",completionHandler:nil)
     }
 
     func windowDidMove(_ notification: Notification) {

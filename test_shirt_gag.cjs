@@ -28,3 +28,6 @@ console.log('PASS: asset readiness, owner lease, both thresholds, abort before c
 const boundary=Gag.create();step(boundary,.1,{...inputs,pressure:74});assert.equal(boundary.phase,'dressed');
 step(boundary,.1,{...inputs,pressure:75,girlReady:false});assert.equal(boundary.phase,'prepare','The gag must trigger at exactly 75%');
 console.log('PASS: 74% stays dressed, exactly 75% starts the shirt gag.');
+
+const rounded=Gag.create();step(rounded,.1,{...inputs,pressure:74.49});assert.equal(rounded.phase,'dressed');
+step(rounded,.1,{...inputs,pressure:74.5,girlReady:false});assert.equal(rounded.phase,'prepare','Trigger must match the displayed rounded 75%');

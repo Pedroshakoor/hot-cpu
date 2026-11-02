@@ -22,7 +22,7 @@ Releases are locally ad-hoc signed, **not Apple Developer ID signed or notarized
 - See real CPU and RAM usage, updated every second, including while the menu is open.
 - Arrivals wave and rub their hands; occasional joyful repeats earn a playful wink from the woman. A drop from three or more characters to one or fewer triggers a short group cheer before departures.
 - The adult woman moves through six pressure-driven stages: relaxed, hair-fix, wink and wave, sideways sit, stretch, and celebration. Pose thresholds are 20%, 40%, 60%, 80%, and 95%, with a small hysteresis margin to prevent jitter. A 24-frame atlas supplies the transitions; low-pressure recovery uses a gradual return sequence.
-- At **75%**, a brief comic puff changes her into a fully covering blue swim top and sends the shirt onto the rightmost man’s head. It stays there through later poses. Below **65%**, he passes it back and another puff restores her shirt. The shirt-holder stays until the return is complete.
+- At a displayed **75%**, a brief comic puff changes her into a fully covering blue swim top and sends the shirt onto the rightmost man’s head. It stays there through later poses. Below a displayed **65%**, he passes it back and another puff restores her shirt. The shirt-holder stays until the return is complete.
 - Choose CPU only, RAM usage only, or the higher of the two.
 - Choose five companion sizes, from 25% to 140%.
 - Click, hold, and drag the companion window to any screen. Its position and size are remembered.
